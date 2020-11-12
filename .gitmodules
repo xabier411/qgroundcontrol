@@ -10,3 +10,6 @@
 [submodule "libs/qmlglsink/gst-plugins-good"]
 	path = libs/qmlglsink/gst-plugins-good
 	url = https://github.com/mavlink/gst-plugins-good.git
+[submodule "libs/libevents/libevents"]
+	path = libs/libevents/libevents
+	url = https://github.com/bkueng/libevents.git

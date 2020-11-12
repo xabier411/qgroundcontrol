@@ -49,6 +49,7 @@
 #include "ComponentInformationManager.h"
 #include "InitialConnectStateMachine.h"
 #include "VehicleBatteryFactGroup.h"
+#include "EventHandler.h"
 #ifdef QT_DEBUG
 #include "MockLink.h"
 #endif
@@ -705,6 +706,12 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         break;
     case MAVLINK_MSG_ID_OBSTACLE_DISTANCE:
         _handleObstacleDistance(message);
+        break;
+
+    case MAVLINK_MSG_ID_EVENT:
+    case MAVLINK_MSG_ID_CURRENT_EVENT_SEQUENCE:
+    case MAVLINK_MSG_ID_EVENT_ERROR:
+        _eventHandler(message.compid).handleEvents(message);
         break;
 
     case MAVLINK_MSG_ID_SERIAL_CONTROL:
@@ -1441,6 +1448,80 @@ void Vehicle::_handlePing(LinkInterface* link, mavlink_message_t& message)
                                message.sysid,
                                message.compid);
     sendMessageOnLinkThreadSafe(link, msg);
+}
+
+void Vehicle::_handleEvent(uint8_t comp_id, std::unique_ptr<events::parser::ParsedEvent> event)
+{
+    int severity = -1;
+    switch (events::externalLogLevel(event->eventData().log_levels)) {
+        case events::Log::Emergency: severity = MAV_SEVERITY_EMERGENCY; break;
+        case events::Log::Alert: severity = MAV_SEVERITY_ALERT; break;
+        case events::Log::Critical: severity = MAV_SEVERITY_CRITICAL; break;
+        case events::Log::Error: severity = MAV_SEVERITY_ERROR; break;
+        case events::Log::Warning: severity = MAV_SEVERITY_WARNING; break;
+        case events::Log::Notice: severity = MAV_SEVERITY_NOTICE; break;
+        case events::Log::Info: severity = MAV_SEVERITY_INFO; break;
+        default: break;
+    }
+
+    // handle special groups & protocols
+    if (event->group() == "health" || event->group() == "arming_check") {
+        _events[comp_id]->healthAndArmingChecks().handleEvent(*event.get());
+        // these are displayed separately
+        return;
+    }
+    if (event->group() == "calibration") {
+        emit calibrationEventReceived(id(), comp_id, severity,
+                QSharedPointer<events::parser::ParsedEvent>{new events::parser::ParsedEvent{*event}});
+        // these are displayed separately
+        return;
+    }
+
+    // show message according to the log level
+    if (severity != -1) {
+        std::string message = event->message();
+        std::string description = event->description();
+        if (message.size() > 0) {
+            // TODO: handle this properly in the UI (e.g. with an expand button to display the description, clickable URL's + params)...
+            QString msg = QString::fromStdString(message);
+            if (description.size() > 0) {
+                msg += "<br/><small><small>" + QString::fromStdString(description).replace("\n", "<br/>") + "</small></small>";
+            }
+            emit textMessageReceived(id(), comp_id, severity, msg);
+        }
+    }
+}
+
+EventHandler& Vehicle::_eventHandler(uint8_t compid)
+{
+    auto event_data = _events.find(compid);
+    if (event_data == _events.end()) {
+        // add new component
+
+        auto send_request_event_message_cb = [this](const mavlink_request_event_t& msg) {
+            mavlink_message_t message;
+            mavlink_msg_request_event_encode_chan(_mavlink->getSystemId(),
+                    _mavlink->getComponentId(),
+                    vehicleLinkManager()->primaryLink()->mavlinkChannel(),
+                    &message,
+                    &msg);
+            sendMessageOnLinkThreadSafe(vehicleLinkManager()->primaryLink(), message);
+        };
+
+        QString profile = "dev"; // TODO: should be configurable
+
+        QSharedPointer<EventHandler> event_handler{new EventHandler(this, profile,
+                std::bind(&Vehicle::_handleEvent, this, compid, std::placeholders::_1),
+                send_request_event_message_cb,
+                _mavlink->getSystemId(), _mavlink->getComponentId(), _id, compid)};
+        event_data = _events.insert(compid, event_handler);
+    }
+    return *event_data->data();
+}
+
+void Vehicle::setEventsMetadata(uint8_t compid, const QString& metadataJsonFileName, const QString& translationJsonFileName)
+{
+    _eventHandler(compid).setMetadata(metadataJsonFileName, translationJsonFileName);
 }
 
 void Vehicle::_handleHeartbeat(mavlink_message_t& message)
