@@ -96,6 +96,8 @@ const char* Vehicle::_temperatureFactGroupName =        "temperature";
 const char* Vehicle::_clockFactGroupName =              "clock";
 const char* Vehicle::_setpointFactGroupName =           "setpoint";
 const char* Vehicle::_distanceSensorFactGroupName =     "distanceSensor";
+const char* Vehicle::_localPositionFactGroupName =      "localPosition";
+const char* Vehicle::_localPositionSetpointFactGroupName ="localPositionSetpoint";
 const char* Vehicle::_escStatusFactGroupName =          "escStatus";
 const char* Vehicle::_estimatorStatusFactGroupName =    "estimatorStatus";
 const char* Vehicle::_terrainFactGroupName =            "terrain";
@@ -148,6 +150,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _clockFactGroup               (this)
     , _setpointFactGroup            (this)
     , _distanceSensorFactGroup      (this)
+    , _localPositionFactGroup       (this)
+    , _localPositionSetpointFactGroup(this)
     , _escStatusFactGroup           (this)
     , _estimatorStatusFactGroup     (this)
     , _terrainFactGroup             (this)
@@ -293,6 +297,8 @@ Vehicle::Vehicle(MAV_AUTOPILOT              firmwareType,
     , _vibrationFactGroup               (this)
     , _clockFactGroup                   (this)
     , _distanceSensorFactGroup          (this)
+    , _localPositionFactGroup           (this)
+    , _localPositionSetpointFactGroup   (this)
 {
     _linkManager = _toolbox->linkManager();
 
@@ -404,6 +410,8 @@ void Vehicle::_commonInit()
     _addFactGroup(&_clockFactGroup,             _clockFactGroupName);
     _addFactGroup(&_setpointFactGroup,          _setpointFactGroupName);
     _addFactGroup(&_distanceSensorFactGroup,    _distanceSensorFactGroupName);
+    _addFactGroup(&_localPositionFactGroup,     _localPositionFactGroupName);
+    _addFactGroup(&_localPositionSetpointFactGroup,_localPositionSetpointFactGroupName);
     _addFactGroup(&_escStatusFactGroup,         _escStatusFactGroupName);
     _addFactGroup(&_estimatorStatusFactGroup,   _estimatorStatusFactGroupName);
     _addFactGroup(&_terrainFactGroup,           _terrainFactGroupName);

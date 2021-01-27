@@ -28,6 +28,8 @@
 #include "SysStatusSensorInfo.h"
 #include "VehicleClockFactGroup.h"
 #include "VehicleDistanceSensorFactGroup.h"
+#include "VehicleLocalPositionFactGroup.h"
+#include "VehicleLocalPositionSetpointFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "VehicleGPSFactGroup.h"
 #include "VehicleSetpointFactGroup.h"
@@ -290,6 +292,8 @@ public:
     Q_PROPERTY(FactGroup*           estimatorStatus READ estimatorStatusFactGroup   CONSTANT)
     Q_PROPERTY(FactGroup*           terrain         READ terrainFactGroup           CONSTANT)
     Q_PROPERTY(FactGroup*           distanceSensors READ distanceSensorFactGroup    CONSTANT)
+    Q_PROPERTY(FactGroup*           localPosition   READ localPositionFactGroup     CONSTANT)
+    Q_PROPERTY(FactGroup*           localPositionSetpoint READ localPositionSetpointFactGroup CONSTANT)
     Q_PROPERTY(QmlObjectListModel*  batteries       READ batteries                  CONSTANT)
 
     Q_PROPERTY(int      firmwareMajorVersion        READ firmwareMajorVersion       NOTIFY firmwareVersionChanged)
@@ -608,6 +612,8 @@ public:
     FactGroup* clockFactGroup               () { return &_clockFactGroup; }
     FactGroup* setpointFactGroup            () { return &_setpointFactGroup; }
     FactGroup* distanceSensorFactGroup      () { return &_distanceSensorFactGroup; }
+    FactGroup* localPositionFactGroup       () { return &_localPositionFactGroup; }
+    FactGroup* localPositionSetpointFactGroup() { return &_localPositionSetpointFactGroup; }
     FactGroup* escStatusFactGroup           () { return &_escStatusFactGroup; }
     FactGroup* estimatorStatusFactGroup     () { return &_estimatorStatusFactGroup; }
     FactGroup* terrainFactGroup             () { return &_terrainFactGroup; }
@@ -1207,6 +1213,8 @@ private:
     VehicleClockFactGroup           _clockFactGroup;
     VehicleSetpointFactGroup        _setpointFactGroup;
     VehicleDistanceSensorFactGroup  _distanceSensorFactGroup;
+    VehicleLocalPositionFactGroup   _localPositionFactGroup;
+    VehicleLocalPositionSetpointFactGroup _localPositionSetpointFactGroup;
     VehicleEscStatusFactGroup       _escStatusFactGroup;
     VehicleEstimatorStatusFactGroup _estimatorStatusFactGroup;
     TerrainFactGroup                _terrainFactGroup;
@@ -1249,6 +1257,8 @@ private:
     static const char* _clockFactGroupName;
     static const char* _setpointFactGroupName;
     static const char* _distanceSensorFactGroupName;
+    static const char* _localPositionFactGroupName;
+    static const char* _localPositionSetpointFactGroupName;
     static const char* _escStatusFactGroupName;
     static const char* _estimatorStatusFactGroupName;
     static const char* _terrainFactGroupName;
